@@ -42,4 +42,5 @@ def analyze_file(expression):
     with Image.open("image2.jpg") as im2:
         out = ImageMath.eval(expression, a=im1, b=im2)
         out.save("result.png")
+        eval(expression)
   
