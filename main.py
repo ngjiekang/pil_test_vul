@@ -36,10 +36,10 @@ def show_user(username):
         User.objects.raw("SELECT * FROM users WHERE username = '%s'", (username,))
 
 from PIL import Image, ImageMath
-@app.route("/files/<file_name>")
-def analyze_file(file_name):
-  with Image.open(file_name) as im1:
+@app.route("/files/<expression>")
+def analyze_file(expression):
+  with Image.open("image1.jpg") as im1:
     with Image.open("image2.jpg") as im2:
-        out = ImageMath.eval("convert(min(a, b), 'L')", a=im1, b=im2)
+        out = ImageMath.eval(expression, a=im1, b=im2)
         out.save("result.png")
   
