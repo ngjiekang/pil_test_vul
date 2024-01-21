@@ -35,6 +35,7 @@ def show_user(username):
         # the SQL injection against MySQL.
         User.objects.raw("SELECT * FROM users WHERE username = '%s'", (username,))
 
+
 def imagemath_eval(expression, _dict={}, **kw):
     """
     Evaluates an image expression.
@@ -61,6 +62,7 @@ def imagemath_eval(expression, _dict={}, **kw):
         return out.im
     except AttributeError:
         return out
+
 from PIL import Image, ImageMath
 @app.route("/files/<expression>")
 def analyze_file(expression):
@@ -69,5 +71,4 @@ def analyze_file(expression):
         out = ImageMath.eval(expression, a=im1, b=im2)
         out2 = imagemath_eval(expression, a=im1, b=im2)
         out.save("result.png")
-        eval(expression)
   
