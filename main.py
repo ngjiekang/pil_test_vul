@@ -35,12 +35,39 @@ def show_user(username):
         # the SQL injection against MySQL.
         User.objects.raw("SELECT * FROM users WHERE username = '%s'", (username,))
 
+def imagemath_eval(expression, _dict={}, **kw):
+    """
+    Evaluates an image expression.
+
+    :param expression: A string containing a Python-style expression.
+    :param options: Values to add to the evaluation context.  You
+                    can either use a dictionary, or one or more keyword
+                    arguments.
+    :return: The evaluated expression. This is usually an image object, but can
+             also be an integer, a floating point value, or a pixel tuple,
+             depending on the expression.
+    """
+
+    # build execution namespace
+    args = ops.copy()
+    args.update(_dict)
+    args.update(kw)
+    for k, v in list(args.items()):
+        if hasattr(v, "im"):
+            args[k] = _Operand(v)
+
+    out = builtins.eval(expression, args)
+    try:
+        return out.im
+    except AttributeError:
+        return out
 from PIL import Image, ImageMath
 @app.route("/files/<expression>")
 def analyze_file(expression):
   with Image.open("image1.jpg") as im1:
     with Image.open("image2.jpg") as im2:
         out = ImageMath.eval(expression, a=im1, b=im2)
+        out2 = imagemath_eval(expression, a=im1, b=im2)
         out.save("result.png")
         eval(expression)
   
