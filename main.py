@@ -36,7 +36,7 @@ class User(models.Model):
 #         User.objects.raw("SELECT * FROM users WHERE username = '%s'", (username,))
 
 import builtins
-def imagemath_eval(expression, _dict={}, **kw):
+def imagemath_eval_vulnerable(expression, _dict={}, **kw):
     """
     Evaluates an image expression.
 
@@ -58,6 +58,47 @@ def imagemath_eval(expression, _dict={}, **kw):
             pass
 
     out = builtins.eval(expression, args)
+
+def imagemath_eval_fixed(expression: str, _dict: dict[str, Any] = {}, **kw: Any) -> Any:
+    """
+    Evaluates an image expression.
+
+    :param expression: A string containing a Python-style expression.
+    :param options: Values to add to the evaluation context.  You
+                    can either use a dictionary, or one or more keyword
+                    arguments.
+    :return: The evaluated expression. This is usually an image object, but can
+             also be an integer, a floating point value, or a pixel tuple,
+             depending on the expression.
+    """
+
+    # build execution namespace
+    args: dict[str, Any] = ops.copy()
+    for k in list(_dict.keys()) + list(kw.keys()):
+        if "__" in k or hasattr(builtins, k):
+            msg = f"'{k}' not allowed"
+            raise ValueError(msg)
+
+    args.update(_dict)
+    args.update(kw)
+    for k, v in args.items():
+        if hasattr(v, "im"):
+            args[k] = _Operand(v)
+
+    compiled_code = compile(expression, "<string>", "eval")
+
+    def scan(code: CodeType) -> None:
+        for const in code.co_consts:
+            if type(const) is type(compiled_code):
+                scan(const)
+
+        for name in code.co_names:
+            if name not in args and name != "abs":
+                msg = f"'{name}' not allowed"
+                raise ValueError(msg)
+
+    scan(compiled_code)
+    out = builtins.eval(expression, {"__builtins": {"abs": abs}}, args)
     
 
 from PIL import Image, ImageMath
@@ -66,6 +107,7 @@ def analyze_file(expression):
   with Image.open("image1.jpg") as im1:
     with Image.open("image2.jpg") as im2:
         out = ImageMath.eval(expression, a=im1, b=im2)
-        out2 = imagemath_eval(expression, a=im1, b=im2)
+        out2 = imagemath_eval_vulnerable(expression, a=im1, b=im2)
+        out2 = imagemath_eval_fixed(expression, a=im1, b=im2)
         out.save("result.png")
   
