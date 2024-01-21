@@ -35,7 +35,7 @@ class User(models.Model):
 #         # the SQL injection against MySQL.
 #         User.objects.raw("SELECT * FROM users WHERE username = '%s'", (username,))
 
-
+import builtins
 def imagemath_eval(expression, _dict={}, **kw):
     """
     Evaluates an image expression.
