@@ -48,4 +48,4 @@ jobs:
           languages: python
           # Override the default behavior so that the action doesn't attempt
           # to auto-install Python dependencies
-          setup-python-dependencies: true
+          setup-python-dependencies: false
